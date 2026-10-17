@@ -1,0 +1,330 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Metrolink Timetable API",
+    "version": "1.0.0",
+    "description": "Scheduled Manchester Metrolink tram departures, stops and routes, built from the official Greater Manchester GTFS timetable. Times are scheduled, not live.",
+    "license": { "name": "Timetable data: ODbL 1.0 (Transport for Greater Manchester)", "url": "https://opendatacommons.org/licenses/odbl/1-0/" }
+  },
+  "servers": [{ "url": "/", "description": "This deployment" }],
+  "security": [{ "ApiKeyAuth": [] }],
+  "tags": [
+    { "name": "Stops", "description": "Tram stops and their scheduled departures." },
+    { "name": "Routes", "description": "Metrolink lines." },
+    { "name": "Status", "description": "Service health and timetable version." }
+  ],
+  "paths": {
+    "/api/v1/stops": {
+      "get": {
+        "operationId": "listStops",
+        "summary": "List stops",
+        "description": "Returns every Metrolink stop. Filter by name with `q`, or pass `lat` and `lon` to sort by distance.",
+        "tags": ["Stops"],
+        "parameters": [
+          { "name": "q", "in": "query", "description": "Case-insensitive name search.", "schema": { "type": "string" }, "example": "picc" },
+          { "name": "lat", "in": "query", "description": "Latitude to sort stops by distance from. Requires `lon`.", "schema": { "type": "number" }, "example": 53.4774 },
+          { "name": "lon", "in": "query", "description": "Longitude to sort stops by distance from. Requires `lat`.", "schema": { "type": "number" }, "example": -2.231 },
+          { "name": "limit", "in": "query", "description": "Maximum number of stops to return.", "schema": { "type": "integer", "minimum": 1, "maximum": 500 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching stops.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["count", "stops"],
+                  "properties": {
+                    "count": { "type": "integer" },
+                    "stops": { "type": "array", "items": { "$ref": "#/components/schemas/Stop" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v1/stops/{stop}": {
+      "get": {
+        "operationId": "getStop",
+        "summary": "Get a stop",
+        "description": "Returns a stop with its platforms and the routes that call there.",
+        "tags": ["Stops"],
+        "parameters": [{ "$ref": "#/components/parameters/StopId" }],
+        "responses": {
+          "200": {
+            "description": "The stop.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StopDetail" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v1/stops/{stop}/departures": {
+      "get": {
+        "operationId": "getDepartures",
+        "summary": "Get departures",
+        "description": "Returns the next scheduled departures from a stop, in UK local time. Trams that terminate at the stop are not included.",
+        "tags": ["Stops"],
+        "parameters": [
+          { "$ref": "#/components/parameters/StopId" },
+          { "name": "limit", "in": "query", "description": "Maximum number of departures.", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+          { "name": "within", "in": "query", "description": "Only include departures within this many minutes.", "schema": { "type": "integer", "minimum": 1, "maximum": 1440, "default": 120 } },
+          { "name": "route", "in": "query", "description": "Only include departures on this line, e.g. `purple`.", "schema": { "type": "string" } },
+          { "name": "at", "in": "query", "description": "Start time as an ISO 8601 date-time, e.g. `2026-10-19T08:00:00+01:00`. Defaults to now.", "schema": { "type": "string", "format": "date-time" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming scheduled departures.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["stop", "from", "realtime", "departures"],
+                  "properties": {
+                    "stop": {
+                      "type": "object",
+                      "required": ["id", "name"],
+                      "properties": { "id": { "type": "string" }, "name": { "type": "string" } }
+                    },
+                    "from": { "type": "string", "format": "date-time", "description": "The time departures are listed from." },
+                    "realtime": { "type": "boolean", "const": false, "description": "Always false: times come from the timetable." },
+                    "departures": { "type": "array", "items": { "$ref": "#/components/schemas/Departure" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v1/routes": {
+      "get": {
+        "operationId": "listRoutes",
+        "summary": "List routes",
+        "description": "Returns every Metrolink route in the timetable.",
+        "tags": ["Routes"],
+        "responses": {
+          "200": {
+            "description": "All routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["count", "routes"],
+                  "properties": {
+                    "count": { "type": "integer" },
+                    "routes": { "type": "array", "items": { "$ref": "#/components/schemas/Route" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v1/routes/{route}": {
+      "get": {
+        "operationId": "getRoute",
+        "summary": "Get a route",
+        "description": "Returns a route with the ordered list of stops it calls at in each direction.",
+        "tags": ["Routes"],
+        "parameters": [
+          { "name": "route", "in": "path", "required": true, "description": "Line ID (e.g. `purple-line` or just `purple`) or a GTFS route_id.", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The route.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RouteDetail" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Get status",
+        "description": "Health check and timetable version. Does not need an API key.",
+        "tags": ["Status"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "realtime", "timetable"],
+                  "properties": {
+                    "status": { "type": "string", "const": "ok" },
+                    "realtime": { "type": "boolean", "const": false },
+                    "timetable": {
+                      "type": "object",
+                      "properties": {
+                        "generatedAt": { "type": "string", "format": "date-time", "description": "When the timetable was last imported." },
+                        "feedVersion": { "type": ["string", "null"] },
+                        "validFrom": { "type": ["string", "null"], "description": "YYYYMMDD" },
+                        "validTo": { "type": ["string", "null"], "description": "YYYYMMDD" },
+                        "stops": { "type": "integer" },
+                        "routes": { "type": "integer" },
+                        "trips": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key", "description": "Your API key." }
+    },
+    "parameters": {
+      "StopId": {
+        "name": "stop",
+        "in": "path",
+        "required": true,
+        "description": "Stop ID (a slug such as `piccadilly`) or the GTFS ID of one of its platforms.",
+        "schema": { "type": "string" },
+        "example": "piccadilly"
+      }
+    },
+    "schemas": {
+      "Stop": {
+        "type": "object",
+        "required": ["id", "name", "lat", "lon", "routes"],
+        "properties": {
+          "id": { "type": "string", "example": "piccadilly" },
+          "name": { "type": "string", "example": "Piccadilly" },
+          "lat": { "type": "number", "example": 53.4775 },
+          "lon": { "type": "number", "example": -2.2309 },
+          "routes": { "type": "array", "items": { "type": "string" }, "description": "IDs of routes calling at this stop." },
+          "distanceMetres": { "type": "integer", "description": "Only present when `lat` and `lon` were given." }
+        }
+      },
+      "StopDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Stop" },
+          {
+            "type": "object",
+            "required": ["platforms"],
+            "properties": {
+              "platforms": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "name", "lat", "lon"],
+                  "properties": {
+                    "id": { "type": "string", "description": "GTFS stop_id of the platform." },
+                    "name": { "type": "string" },
+                    "code": { "type": ["string", "null"], "description": "Platform letter or number, when published." },
+                    "lat": { "type": "number" },
+                    "lon": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Route": {
+        "type": "object",
+        "required": ["id", "mode", "name", "longName"],
+        "properties": {
+          "id": { "type": "string", "description": "Slug of the line name.", "example": "purple-line" },
+          "mode": { "type": "string", "enum": ["tram", "bus"], "description": "`bus` for rail replacement buses run by Metrolink." },
+          "name": { "type": "string", "example": "Purple Line" },
+          "longName": { "type": "string" },
+          "color": { "type": ["string", "null"], "example": "#7B2082" },
+          "textColor": { "type": ["string", "null"], "example": "#FFFFFF" }
+        }
+      },
+      "RouteDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Route" },
+          {
+            "type": "object",
+            "required": ["patterns"],
+            "properties": {
+              "patterns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["direction", "destination", "stops"],
+                  "properties": {
+                    "direction": { "type": ["integer", "null"] },
+                    "destination": { "type": "string" },
+                    "stops": { "type": "array", "items": { "$ref": "#/components/schemas/Stop" } }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Departure": {
+        "type": "object",
+        "required": ["tripId", "route", "destination", "platform", "serviceDate", "scheduledArrival", "scheduledDeparture", "minutesUntilDeparture"],
+        "properties": {
+          "tripId": { "type": "string" },
+          "route": { "$ref": "#/components/schemas/Route" },
+          "destination": { "type": "string", "example": "Etihad Campus" },
+          "platform": {
+            "type": "object",
+            "required": ["id"],
+            "properties": { "id": { "type": "string" }, "code": { "type": ["string", "null"] } }
+          },
+          "serviceDate": { "type": "string", "format": "date", "description": "Timetable day this trip belongs to; after midnight it is the previous day." },
+          "scheduledArrival": { "type": "string", "format": "date-time", "example": "2026-10-19T08:00:00+01:00" },
+          "scheduledDeparture": { "type": "string", "format": "date-time", "example": "2026-10-19T08:00:00+01:00" },
+          "minutesUntilDeparture": { "type": "integer", "example": 5 }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": { "description": "A parameter is invalid.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unauthorized": { "description": "The API key is missing or not recognised.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "The stop or route does not exist.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "RateLimited": {
+        "description": "Too many requests for this API key.",
+        "headers": {
+          "Retry-After": { "description": "Seconds until you can retry.", "schema": { "type": "integer" } },
+          "X-RateLimit-Limit": { "description": "Requests allowed per minute.", "schema": { "type": "integer" } },
+          "X-RateLimit-Remaining": { "description": "Requests left in the current window.", "schema": { "type": "integer" } },
+          "X-RateLimit-Reset": { "description": "Unix time (seconds) when the window resets.", "schema": { "type": "integer" } }
+        },
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    }
+  }
+}

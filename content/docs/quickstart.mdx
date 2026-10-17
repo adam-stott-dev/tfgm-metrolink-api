@@ -1,0 +1,68 @@
+---
+title: Quickstart
+description: Make your first request.
+---
+
+## 1. Get an API key
+
+Every endpoint except [`/api/v1/status`](/docs/api/status/get-status) needs an API key.
+Ask the API owner for a key.
+
+## 2. Find a stop
+
+```bash
+curl -H "X-API-Key: YOUR_KEY" "https://YOUR-DOMAIN/api/v1/stops?q=picc"
+```
+
+```json
+{
+  "count": 1,
+  "stops": [
+    { "id": "piccadilly", "name": "Piccadilly", "lat": 53.4775, "lon": -2.2309, "routes": ["..."] }
+  ]
+}
+```
+
+Stop IDs are slugs of the stop name, such as `piccadilly`, `st-peters-square` or `media-city-uk`.
+You can also use the GTFS ID of any of the stop's platforms.
+
+## 3. Get departures
+
+```bash
+curl -H "X-API-Key: YOUR_KEY" "https://YOUR-DOMAIN/api/v1/stops/piccadilly/departures?limit=3"
+```
+
+```json
+{
+  "stop": { "id": "piccadilly", "name": "Piccadilly" },
+  "from": "2026-10-19T08:00:00+01:00",
+  "realtime": false,
+  "departures": [
+    {
+      "tripId": "...",
+      "route": { "id": "purple-line", "mode": "tram", "name": "Purple Line", "longName": "Altrincham - Etihad Campus", "color": null, "textColor": null },
+      "destination": "Etihad Campus",
+      "platform": { "id": "...", "code": null },
+      "serviceDate": "2026-10-19",
+      "scheduledArrival": "2026-10-19T08:04:00+01:00",
+      "scheduledDeparture": "2026-10-19T08:04:00+01:00",
+      "minutesUntilDeparture": 4
+    }
+  ]
+}
+```
+
+## Try it in the browser
+
+Every page in the [API Reference](/docs/api/stops/get-departures) has a playground.
+Press **Try in Playground**, enter your key in the **Authorization** section and press **Send**.
+
+## JavaScript example
+
+```ts
+const res = await fetch('https://YOUR-DOMAIN/api/v1/stops/piccadilly/departures?limit=5', {
+  headers: { 'X-API-Key': process.env.METROLINK_API_KEY! },
+});
+if (!res.ok) throw new Error((await res.json()).error.message);
+const { departures } = await res.json();
+```

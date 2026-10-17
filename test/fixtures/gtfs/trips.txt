@@ -1,0 +1,9 @@
+route_id,service_id,trip_id,trip_headsign,direction_id
+PURP,WK,T1,Etihad Campus (Manchester Metrolink),0
+PURP,WK2,T1DUP,Etihad Campus (Manchester Metrolink),0
+PURP,WK,T2,Piccadilly,1
+PURP,WK,T3,Etihad Campus,0
+PURP,SAT,T4,"Etihad Campus",0
+PURP2,WK,T5,New Islington,0
+RB1,SAT,RB1T,Etihad Campus,0
+B42,BUSWK,BUS1,Didsbury,0

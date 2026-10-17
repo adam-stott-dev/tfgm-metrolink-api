@@ -1,0 +1,34 @@
+---
+title: Timetable data
+description: Where the data comes from and how times work.
+---
+
+## Source
+
+Data comes from Transport for Greater Manchester's
+[GM Public Transport Schedules](https://ckan.publishing.service.gov.uk/dataset/gm-public-transport-schedules-gtfs)
+GTFS feed, published under the
+[Open Database Licence (ODbL) 1.0](https://opendatacommons.org/licenses/odbl/1-0/).
+The feed covers buses and trams; this API keeps only Metrolink.
+
+The timetable is re-imported every night. [`/api/v1/status`](/docs/api/status/get-status)
+shows when it was last imported and the dates the feed covers.
+
+## Scheduled, not live
+
+All times are **scheduled**. Planned engineering works are included when TfGM publishes them
+in the timetable, but live delays, cancellations and short-notice disruption are not.
+
+## Times and dates
+
+- All times are UK local time (`Europe/London`) and are returned as ISO 8601 with an offset,
+  e.g. `2026-10-19T08:04:00+01:00`. Clock changes are handled for you.
+- `serviceDate` is the timetable day a tram belongs to. A tram at 00:20 on Saturday
+  usually belongs to Friday's service, so its `serviceDate` is Friday.
+- A tram's final stop is an arrival, so it is not listed as a departure from that stop.
+
+## Stop IDs
+
+Stops are identified by a slug of their name (`piccadilly`, `deansgate-castlefield`).
+Each stop groups its platforms, and you can also look a stop up by any platform's GTFS ID.
+Slugs come from the timetable's stop names, so they stay the same unless TfGM renames a stop.

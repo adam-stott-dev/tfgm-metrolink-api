@@ -1,0 +1,7 @@
+stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type,parent_station,platform_code
+9400ZZMAPIC,,Piccadilly (Manchester Metrolink),53.4775,-2.2309,1,,
+9400ZZMAPIC1,,Piccadilly (Manchester Metrolink),53.4774,-2.2310,0,9400ZZMAPIC,A
+9400ZZMAPIC2,,Piccadilly (Manchester Metrolink),53.4776,-2.2308,0,9400ZZMAPIC,B
+9400ZZMANCI1,,New Islington (Manchester Metrolink),53.4813,-2.2236,0,,
+9400ZZMAETC1,,Etihad Campus (Manchester Metrolink),53.4855,-2.2016,0,,
+1800BUS001,,Piccadilly Gardens Bus,53.4810,-2.2370,0,,

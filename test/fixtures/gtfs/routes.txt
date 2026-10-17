@@ -1,0 +1,5 @@
+route_id,agency_id,route_short_name,route_long_name,route_type,route_color,route_text_color
+PURP,METL,Purple Line,Etihad Campus - Piccadilly,0,7B2082,FFFFFF
+PURP2,METL,Purple Line,Piccadilly - New Islington,0,,
+RB1,METL,Replacement Bus,Piccadilly - Etihad Campus,0,,
+B42,BUS1,42,Didsbury - Piccadilly,3,,

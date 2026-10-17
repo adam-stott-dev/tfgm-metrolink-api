@@ -1,0 +1,49 @@
+---
+title: Authentication & limits
+description: API keys, rate limits and errors.
+---
+
+## API keys
+
+Send your key in the `X-API-Key` header:
+
+```bash
+curl -H "X-API-Key: YOUR_KEY" https://YOUR-DOMAIN/api/v1/routes
+```
+
+If you can't set headers, an `api_key` query parameter also works, but it can end up in
+logs, so prefer the header.
+
+## Rate limits
+
+Each key has a per-minute limit (60 requests a minute unless your key was given a
+different one). Every authenticated response includes:
+
+| Header | Meaning |
+| --- | --- |
+| `X-RateLimit-Limit` | Requests allowed per minute |
+| `X-RateLimit-Remaining` | Requests left in the current window |
+| `X-RateLimit-Reset` | Unix time (seconds) when the window resets |
+
+Going over the limit returns `429 Too Many Requests` with a `Retry-After` header in seconds.
+
+## Errors
+
+Errors always have the same shape:
+
+```json
+{ "error": { "code": "stop_not_found", "message": "No Metrolink stop matches \"foo\"." } }
+```
+
+| Status | `code` | When |
+| --- | --- | --- |
+| 400 | `invalid_parameter` | A query parameter is missing or invalid |
+| 401 | `missing_api_key`, `invalid_api_key` | No key, or an unknown key |
+| 404 | `stop_not_found`, `route_not_found` | The stop or route doesn't exist |
+| 429 | `rate_limited` | Too many requests for this key |
+| 500 | `internal_error` | Something went wrong on our side |
+
+## CORS
+
+The API sends `Access-Control-Allow-Origin: *`, so you can call it from a browser.
+Remember that a key used in front-end code is visible to anyone using your site.

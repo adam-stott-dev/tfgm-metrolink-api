@@ -1,0 +1,41 @@
+---
+title: Introduction
+description: Scheduled Manchester Metrolink tram times over a simple REST API.
+---
+
+The Metrolink Timetable API gives you stops, routes and upcoming departures for the
+Manchester Metrolink tram network as JSON.
+
+It is built from the official Greater Manchester timetable (GTFS), which is imported
+every night. It does not call the TfGM live departures API, so it keeps working
+without a TfGM key.
+
+<Callout type="warn" title="Scheduled times only">
+  Departures are the times in the published timetable. They don't include live delays,
+  cancellations or disruption, and every response says `"realtime": false`.
+</Callout>
+
+## What you can do
+
+<Cards>
+  <Card title="Next departures" href="/docs/api/stops/get-departures">
+    The next trams from any stop, with platform, destination and minutes to departure.
+  </Card>
+  <Card title="Find stops" href="/docs/api/stops/list-stops">
+    Search stops by name, or find the closest ones to a location.
+  </Card>
+  <Card title="Routes" href="/docs/api/routes/get-route">
+    Every line with the stops it calls at, in order.
+  </Card>
+  <Card title="Quickstart" href="/docs/quickstart">
+    Make your first request in a couple of minutes.
+  </Card>
+</Cards>
+
+## Base URL
+
+All endpoints live under `/api/v1` on this site, for example:
+
+```
+GET /api/v1/stops/piccadilly/departures
+```

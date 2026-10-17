@@ -1,0 +1,4 @@
+{
+  "title": "Docs",
+  "pages": ["index", "quickstart", "authentication", "timetable-data", "self-hosting", "---API Reference---", "...api"]
+}

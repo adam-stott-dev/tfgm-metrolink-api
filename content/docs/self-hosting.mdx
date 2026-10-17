@@ -1,0 +1,43 @@
+---
+title: Self-hosting
+description: Deploy your own copy on Vercel.
+---
+
+The project is a single Next.js app: the API, these docs and the landing page deploy together.
+
+## Deploy
+
+1. Import the repository into Vercel. The default build settings work: `npm run build`
+   downloads the GTFS timetable, builds `data/metrolink.json`, then runs `next build`.
+2. Set the environment variables below.
+3. Optional: add Upstash Redis from the Vercel Marketplace for rate limiting.
+
+## Environment variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `API_KEYS` | Yes (production) | Comma-separated keys. Add `:N` to give a key its own per-minute limit, e.g. `key1,partner-key:600`. |
+| `RATE_LIMIT_PER_MINUTE` | No | Default per-key limit. Defaults to `60`. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Enables rate limiting. `KV_REST_API_URL` / `KV_REST_API_TOKEN` from the Vercel integration also work. Without them, requests are not rate limited. |
+| `CRON_SECRET` | For nightly refresh | Vercel sends this to the cron endpoint. |
+| `DEPLOY_HOOK_URL` | For nightly refresh | A Vercel Deploy Hook for the production branch. |
+| `GTFS_URL` | No | Override the timetable download URL. |
+
+In production, the API refuses requests until `API_KEYS` is set. In local development with
+no keys set, the API is open.
+
+## Nightly refresh
+
+`vercel.json` schedules `/api/cron/refresh` once a day. It calls your Deploy Hook, which
+rebuilds the site with the latest timetable. If TfGM's download fails, the build fails and
+the previous deployment keeps serving.
+
+## Local development
+
+```bash
+npm install
+npm run data        # download the timetable into data/metrolink.json
+npm run dev
+```
+
+To work offline, point `GTFS_FILE` at a downloaded GTFS zip: `GTFS_FILE=./gtfs.zip npm run data`.
